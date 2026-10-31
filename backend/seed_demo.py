@@ -1,6 +1,7 @@
 """Demo data seeder for PWS ILP MELATI. Idempotent - runs on startup.
 ALL DATA IS FICTIONAL (data fiktif untuk demonstrasi)."""
 import json, os, random, uuid
+from pymongo.errors import DuplicateKeyError
 from datetime import datetime, timezone, timedelta
 
 BASE = os.path.dirname(__file__)
@@ -27,20 +28,27 @@ async def seed_all(db, hash_password):
     admin_user = admin_email.split("@")[0]
     existing_admin = await db.users.find_one({"role": "admin"})
     if not existing_admin:
-        await db.users.insert_one({
-            "id": nid(), "username": "admin", "email": admin_email,
-            "nama": "Petugas Puskesmas Melati", "role": "admin",
-            "wilayah": KELURAHAN, "posyandu": "", "aktif": True,
-            "password_hash": hash_password(os.environ.get("ADMIN_PASSWORD", "admin123")),
-            "created_at": iso()})
+        try:
+            await db.users.insert_one({
+                "id": nid(), "username": "admin", "email": admin_email,
+                "nama": "Petugas Puskesmas Melati", "role": "admin",
+                "wilayah": KELURAHAN, "posyandu": "", "aktif": True,
+                "password_hash": hash_password(os.environ.get("ADMIN_PASSWORD", "admin123")),
+                "created_at": iso()})
+        except DuplicateKeyError:
+            pass  # Abaikan jika username admin sudah ada
+
     # kader
     if await db.users.count_documents({"role": "kader"}) == 0:
         for i, nama in enumerate(KADER_NAMA):
-            await db.users.insert_one({
-                "id": nid(), "username": f"kader{i+1}", "nama": nama, "role": "kader",
-                "wilayah": [KELURAHAN[i % 4]], "posyandu": POSYANDU[i % len(POSYANDU)],
-                "target_keluarga": 30, "aktif": True,
-                "password_hash": hash_password("kader123"), "created_at": iso()})
+            try:
+                await db.users.insert_one({
+                    "id": nid(), "username": f"kader{i+1}", "nama": nama, "role": "kader",
+                    "wilayah": [KELURAHAN[i % 4]], "posyandu": POSYANDU[i % len(POSYANDU)],
+                    "target_keluarga": 30, "aktif": True,
+                    "password_hash": hash_password("kader123"), "created_at": iso()})
+            except DuplicateKeyError:
+                pass  # Abaikan jika username kader sudah ada
 
     # ---- wilayah & posyandu ----
     if await db.wilayah.count_documents({}) == 0:
