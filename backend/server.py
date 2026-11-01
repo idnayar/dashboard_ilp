@@ -197,10 +197,18 @@ KELOMPOK_LABEL = {
 
 # ---------------- Startup: seed ----------------
 @app.on_event("startup")
-async def startup():
-    await db.users.create_index("username", unique=True)
-    from seed_demo import seed_all
-    await seed_all(db, hash_password)
+async def startup_event():
+    # Cukup buat akun admin utama saja, jangan panggil seed_all atau seed_demo
+    admin_email = os.environ.get("ADMIN_EMAIL", "tiofansha@gmail.com")
+    existing_admin = await db.users.find_one({"role": "admin"})
+    if not existing_admin:
+        await db.users.insert_one({
+            "id": nid(), "username": "admin", "email": admin_email,
+            "nama": "Petugas Puskesmas Melati", "role": "admin",
+            "wilayah": KELURAHAN, "posyandu": "", "aktif": True,
+            "password_hash": hash_password(os.environ.get("ADMIN_PASSWORD", "admin123")),
+            "created_at": iso()
+        })
 
 # ==================== AUTH ====================
 @api.post("/auth/login")
