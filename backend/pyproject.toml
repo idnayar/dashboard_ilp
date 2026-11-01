@@ -1,0 +1,18 @@
+[project]
+name = "pkm-melati-backend"
+version = "0.1.0"
+description = "Backend PWS ILP Puskesmas Melati"
+requires-python = "==3.11.9"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "pymongo",
+    "pandas",
+    "numpy",
+    "python-dotenv"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
