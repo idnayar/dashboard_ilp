@@ -28,6 +28,12 @@ JWT_SECRET = os.environ['JWT_SECRET']
 JWT_ALG = "HS256"
 
 app = FastAPI(title="PWS ILP MELATI")
+
+# Endpoint khusus untuk cron job (sangat ringan & tidak memicu output besar)
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
+
 api = APIRouter(prefix="/api")
 
 def now_utc():
